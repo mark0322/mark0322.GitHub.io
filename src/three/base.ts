@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { Animate } from './Animate'
 import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer.js'
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
-import Emitter from '../../../utils/Emitter'
+import Emitter from '@/utils/Emitter'
 
 const defaultOptions: Options = {
   openRender: true,

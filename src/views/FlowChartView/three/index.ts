@@ -1,4 +1,5 @@
-import { Base } from './base'
+// import { Base } from './base'
+import { Base } from '@/three/base'
 import * as THREE from 'three'
 import gsap from "gsap"
 import { RESTORE_END, FLYWIRE_ANIMATE, GUN_ANIMATE, SOCKET_ANIMATE } from './constants'
@@ -172,6 +173,7 @@ export default class Init extends Base {
   drawPipeLine() {
     const g = new THREE.Group();
     this.scene.add(g);
+    // g.translateY(0.5)
 
     const material = new MeshLineMaterial({
       lineWidth: .5,

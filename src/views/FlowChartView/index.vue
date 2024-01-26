@@ -17,8 +17,9 @@ const oThree = useThree(refEl as Ref<HTMLDivElement>);
 
 // console.log('oThree.value', oThree.value)
 onMounted(() => {
-
   oThree.value?.drawFlylinesByMode(flyLineData.stationDischarge)
+
+  oThree.value?.showPointsText()
 })
 
 
