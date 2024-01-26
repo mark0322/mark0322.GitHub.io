@@ -304,32 +304,11 @@ export const devices: Device[] = [
       return div;
     }
   },
-  { // 查看全部
-    coord: [13, 8],
-    name: '查看全部',
-    createElement() {
-      const bindFn = () => {
-        eventBus.$emit(VIEW_ALL_BATTERIES);
-      }
 
-      const div = document.createElement('div');
-      div.innerHTML = `
-        <div class="text-white bg-primary px-3 py-1 rounded-2xl pointer-events-auto">查看全部</div>
-      `;
-
-      div.addEventListener('click', bindFn)
-
-      onUnmounted(() => {
-        div.removeEventListener('click', bindFn)
-      })
-      return div;
-    }
-  },
   { // 充电枪 - right
     coord: [-13.5, 13],
     name: '充电枪2',
     className: 'gunRight',
-    autoPointerEvents: true,
     createElement() {
       const activeIcon = new URL('../assets/充电枪_active.png', import.meta.url).href;
       const deactiveIcon = new URL('../assets/充电枪_deactive.png', import.meta.url).href;
@@ -353,7 +332,6 @@ export const devices: Device[] = [
     coord: [-20.5, 13],
     name: '充电枪1',
     className: 'gunLeft',
-    autoPointerEvents: true,
     createElement() {
       const activeIcon = new URL('../assets/充电枪_active.png', import.meta.url).href;
       const deactiveIcon = new URL('../assets/充电枪_deactive.png', import.meta.url).href;
@@ -374,8 +352,8 @@ export const devices: Device[] = [
     }
   },
   { // 车载充电桩
-    coord: [-17, 19],
-    name: '车载充电桩',
+    coord: [-18.9, 19],
+    name: '',
     className: '',
     createElement() {
       const icon = new URL('../assets/DC_DC充电桩.png', import.meta.url).href;
@@ -393,10 +371,9 @@ export const devices: Device[] = [
     }
   },
   { // PCS
-    coord: [-3.25, 23],
-    name: 'PCS',
+    coord: [-3.5, 23],
+    name: 'pcs',
     className: 'pcs',
-    autoPointerEvents: true,
     createElement() {
       const icon = new URL('../assets/PCS_AC_DC.png', import.meta.url).href;
 
@@ -415,10 +392,9 @@ export const devices: Device[] = [
     }
   },
   { // 右 - 电表
-    coord: [-2, 20],
-    name: '电表',
+    coord: [-2.8, 20],
+    name: '',
     className: 'meterRight',
-    autoPointerEvents: true,
     createElement() {
       const icon = new URL('../assets/电表.png', import.meta.url).href;
 
@@ -437,7 +413,7 @@ export const devices: Device[] = [
     }
   },
   { // 交流总开关 qf1
-    coord: [-1.1, 17],
+    coord: [-1.25, 17],
     name: '交流总开关',
     className: 'qf1',
     createElement() {
@@ -451,14 +427,14 @@ export const devices: Device[] = [
           <img class="error-icon hidden absolute -top-8 right-12" src="${errorIcon}" />
           <img src="${activeIcon}" class="active" style="display: none" />
           <img src="${deactiveIcon}" class="deactive" />
-          <span class="text-white ml-1">${this.name}</span>
+          <span class="text-white ml-1 mt-1">${this.name}</span>
         </div>
       `;
       return div;
     }
   },
   { // 市电接触器 km2
-    coord: [-6.6, 13.25],
+    coord: [-6.8, 13.25],
     name: '市电接触器',
     className: 'km2',
     createElement() {
@@ -479,7 +455,7 @@ export const devices: Device[] = [
     }
   },
   { // 负载总开关 qf3
-    coord: [2, 13.25],
+    coord: [1.8, 13.25],
     name: '负载总开关',
     className: 'qf3',
     createElement() {
@@ -500,13 +476,12 @@ export const devices: Device[] = [
     }
   },
   { // 市电总开关 qf4
-    coord: [-6.1, 9.5],
-    name: '市电总开关',
+    coord: [-7.8, 9.5],
+    name: '',
     className: 'qf4',
     createElement() {
       const activeIcon = new URL('../assets/QF_work.png', import.meta.url).href;
       const deactiveIcon = new URL('../assets/QF_nowork.png', import.meta.url).href;
-
       const div = document.createElement('div');
       div.className = this.className!;
       div.innerHTML = `
@@ -514,14 +489,14 @@ export const devices: Device[] = [
           <img class="error-icon hidden absolute -top-8 right-12" src="${errorIcon}" />
           <img src="${activeIcon}" class="active" style="display: none" />
           <img src="${deactiveIcon}" class="deactive" />
-          <span class="text-white ml-1">${this.name}</span>
+          <span class="text-white ml-1 mt-1">${this.name}</span>
         </div>
       `;
       return div;
     }
   },
   { // KN/M1 km5
-    coord: [13.25, 16.5],
+    coord: [13.1, 16.5],
     name: 'KN/M1',
     className: 'km5',
     createElement() {
@@ -535,14 +510,14 @@ export const devices: Device[] = [
           <img class="error-icon hidden absolute -top-10 right-4" src="${errorIcon}" />
           <img src="${activeIcon}" class="active" style="display: none" />
           <img src="${deactiveIcon}" class="deactive" />
-          <span class="text-white ml-1">${this.name}</span>
+          <span class="text-white ml-1 mt-1">${this.name}</span>
         </div>
       `;
       return div;
     }
   },
   { // KN/M2 km6
-    coord: [20.75, 16.5],
+    coord: [20.65, 16.5],
     name: 'KN/M2',
     className: 'km6',
     createElement() {
@@ -556,15 +531,15 @@ export const devices: Device[] = [
           <img class="error-icon hidden absolute -top-10 right-4" src="${errorIcon}" />
           <img src="${activeIcon}" class="active" style="display: none" />
           <img src="${deactiveIcon}" class="deactive" />
-          <span class="text-white ml-1">${this.name}</span>
+          <span class="text-white ml-1 mt-1">${this.name}</span>
         </div>
       `;
       return div;
     }
   },
   { // socket-left
-    coord: [17.5, 21],
-    name: '快充插座',
+    coord: [16.5, 20.5],
+    name: '',
     className: 'socket-left',
     createElement() {
       const activeIcon = new URL('../assets/socket_work.png', import.meta.url).href;
@@ -584,8 +559,8 @@ export const devices: Device[] = [
     }
   },
   { // socket-right
-    coord: [23.5, 21],
-    name: '快充插座',
+    coord: [22.7, 20.5],
+    name: '',
     className: 'socket-right',
     createElement() {
       const activeIcon = new URL('../assets/socket_work.png', import.meta.url).href;
@@ -605,10 +580,10 @@ export const devices: Device[] = [
     }
   },
   { // DC/DC
-    coord: [13.2, 20.5],
-    name: 'DC/DC',
+    coord: [12.2, 20.5],
+    name: '',
     className: 'dcdc',
-    autoPointerEvents: true,
+    // autoPointerEvents: true,
     createElement() {
       const icon = new URL('../assets/DC_DC.png', import.meta.url).href;
       const div = document.createElement('div');
@@ -641,7 +616,7 @@ export const devices: Device[] = [
     coord: [4.5, 9.5],
     name: 'UPS',
     className: 'ups',
-    autoPointerEvents: true,
+    // autoPointerEvents: true,
     createElement() {
       const div = document.createElement('div');
       div.innerHTML = `
@@ -655,7 +630,7 @@ export const devices: Device[] = [
   },
   { // 市电
     coord: [-13, 4],
-    name: '市电',
+    name: '',
     createElement() {
       const icon = new URL('../assets/市电.png', import.meta.url).href;
       const div = document.createElement('div');
@@ -670,8 +645,8 @@ export const devices: Device[] = [
     }
   },
   { // 电表
-    coord: [-8, 3.5],
-    name: '电表',
+    coord: [-8, 4],
+    name: '',
     className: 'meterLeft',
     autoPointerEvents: true,
     createElement() {
@@ -691,10 +666,10 @@ export const devices: Device[] = [
     }
   },
   { // BAU
-    coord: [0.5, 3.5],
-    name: 'BAU',
+    coord: [0.4, 3.8],
+    name: '',
     className: 'bau',
-    autoPointerEvents: true,
+    // autoPointerEvents: true,
     createElement() {
       const icon = new URL('../assets/BAU.png', import.meta.url).href;
       const div = document.createElement('div');
@@ -713,7 +688,7 @@ export const devices: Device[] = [
   },
   { // 消防系统
     coord: [3.7, 3.5],
-    name: '消防系统',
+    name: '',
     className: 'fireControl',
     // autoPointerEvents: true,
     createElement() {
@@ -724,7 +699,7 @@ export const devices: Device[] = [
         <div class="flex center-y translate-x-5 flex-col">
           <img class="error-icon hidden absolute -top-8 -right-4" src="${errorIcon}" />
           <img src="${icon}"/>
-          <span class="text-white ">${this.name}</span>
+          <span class="text-white">${this.name}</span>
         </div>
       `;
 
@@ -733,8 +708,8 @@ export const devices: Device[] = [
     }
   },
   { // EMS
-    coord: [7, 3.5],
-    name: 'EMS',
+    coord: [7, 3.7],
+    name: '',
     createElement() {
       const icon = new URL('../assets/EMS.png', import.meta.url).href;
       const div = document.createElement('div');
