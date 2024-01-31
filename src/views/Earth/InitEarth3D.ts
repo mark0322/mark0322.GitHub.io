@@ -48,6 +48,13 @@ export default class InitEarth3D extends Base {
   }
 
   /**
+   * 绘制国家的mesh
+   */
+  drawCountryMesh() {
+
+  }
+
+  /**
    * 绘制国家边界线
    */
   drawCountryEdgeLine(multiPolygon: MultiPolygonCoord, r: number) {
@@ -64,6 +71,8 @@ export default class InitEarth3D extends Base {
         lineGroup.add(this.drawLine(point3dList, this.edgeLineMaterial));
       });
     });
+
+    return lineGroup;
   }
 
   /**

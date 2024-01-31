@@ -1,8 +1,9 @@
 /**
  * 经纬度坐标转为 3D球面空间 坐标
- * @param {地球半径} R  
- * @param {经度(角度值)} longitude 
- * @param {维度(角度值)} latitude
+ * @param 地球半径 R  
+ * @param 经度(角度值) longitude 
+ * @param 纬度(角度值) latitude
+ * @returns 3D空间坐标 [x, y, z]
  */
 export function lon2xyz(R: number,longitude: number,latitude: number) {
   let lon = longitude * Math.PI / 180;//转弧度值
