@@ -1,11 +1,11 @@
-// import { Base } from './base'
+// @ts-nocheck
 import { Base } from '@/three/base'
 import * as THREE from 'three'
 import gsap from "gsap"
 import { RESTORE_END, FLYWIRE_ANIMATE, GUN_ANIMATE, SOCKET_ANIMATE } from './constants'
-import { onBeforeUnmount, onMounted, ref, watch, type Ref } from "vue";
+import { onBeforeUnmount, onMounted, ref, type Ref } from "vue";
 import { MeshLine, MeshLineMaterial } from 'three.meshline'
-import { pipelinePoints, devices, flyLineData, gunFlyline, socketFlyline } from './config'
+import { pipelinePoints, devices, gunFlyline, socketFlyline } from './config'
 import { type Flywire } from './flyLine_config'
 import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js'
 import { times, clamp } from 'lodash-es'
@@ -55,9 +55,6 @@ export default class Init extends Base {
       depthWrite: false,
     });
 
-    // TODO：需 数据驱动
-    //  绘制 指定模式的 飞线
-    // this.drawFlylinesByMode(flyLineData.peakLoadShiftingDischarge)
   }
 
   /**
@@ -173,7 +170,6 @@ export default class Init extends Base {
   drawPipeLine() {
     const g = new THREE.Group();
     this.scene.add(g);
-    // g.translateY(0.5)
 
     const material = new MeshLineMaterial({
       lineWidth: .5,

@@ -13,6 +13,11 @@ const router = createRouter({
       path: '/about',
       name: 'about',
       component: () => import('../views/FlowChartView/index.vue')
+    },
+    {
+      path: '/earth',
+      name: 'earch',
+      component: () => import('../views/Earth/index.vue')
     }
   ]
 })

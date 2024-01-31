@@ -1,3 +1,9 @@
+export type MeshStandard = THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>
+export type MeshBasic = THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial>
+export type Mesh = THREE.Mesh<THREE.BufferGeometry, THREE.Material>
+
+
+// 一次性接线图相关 type
 /**
  * 点位信息
  */
