@@ -15,6 +15,7 @@ export default class InitEarth3D extends Base {
   edgeLineMaterial = new THREE.LineBasicMaterial({ color: 43690 });
   countryMeshMaterial = new THREE.MeshPhongMaterial({ color: 0x002222 });
   matEarthBg = new THREE.MeshLambertMaterial({ color: 0x111111 }); // 地球背景(底色：黑 / 底图)
+  atmosphere!: THREE.Mesh; // 大气层
 
   constructor(dom: HTMLDivElement) {
     super(dom);
@@ -35,6 +36,8 @@ export default class InitEarth3D extends Base {
   /**
    * 绘制：
    *  1. 国家的边界线
+   *  2. 绘制国家的 mesh
+   *  3. 绘制地球的 mesh
    * @param r 
    * @param features 
    */
@@ -56,10 +59,39 @@ export default class InitEarth3D extends Base {
       const mesh = this.drawCountryMesh(coordinates, r);
       mesh.userData.properties = feature.properties;
       mesh.name = feature.properties.name;
-
-      // 3. 绘制地球的 bg
-      this.drawEarthBgWithGlow(r);
     });
+
+    // 3. 绘制地球的 bg
+    this.drawEarthBgWithGlow(r);
+
+    // 4. 绘制流动的大气层 
+    this.drawAtmosphere(r)
+  }
+
+  /**
+   * 模拟 流动的 大气层
+   */
+  private drawAtmosphere(r: number) {
+    const texture = this.textureLoader.load('/earth3d/大气.png');
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+
+    const geometry = new THREE.SphereGeometry(r + 0.001);
+    const material = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 0.3,
+      depthTest: false
+    });
+
+    this.animate.add(() => {
+      texture.offset.x -= 0.0001;
+      texture.offset.y += 0.00005;
+    });
+
+    this.atmosphere = new THREE.Mesh(geometry, material);
+    this.atmosphere.visible = false;
+    this.scene.add(this.atmosphere);
   }
 
   /**
@@ -76,13 +108,13 @@ export default class InitEarth3D extends Base {
     const spriteMaterial = new THREE.SpriteMaterial({
       map: this.textureLoader.load('/earth3d/地球光圈.png'),
       transparent: true,
-      opacity: 0.02,
+      opacity: 0.5,
     });
     const sprite = new THREE.Sprite(spriteMaterial);
     sprite.scale.set(r * 2.95, r * 2.95, 1)
-    // earthBg.add(sprite);
+    earthBg.add(sprite);
 
-    this.scene.add(earthBg, sprite)
+    this.scene.add(earthBg)
 
     return earthBg;
   }
