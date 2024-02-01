@@ -11,11 +11,13 @@ import { EarthBGType } from './enum';
 
 export default class InitEarth3D extends Base {
   label!: CSS2DObject;
-  R!: number; // 地球的 半径
   edgeLineMaterial = new THREE.LineBasicMaterial({ color: 43690 });
-  countryMeshMaterial = new THREE.MeshPhongMaterial({ color: 0x002222 });
-  matEarthBg = new THREE.MeshLambertMaterial({ color: 0x111111 }); // 地球背景(底色：黑 / 底图)
+  countryMeshMaterial = new THREE.MeshPhongMaterial({ color: 0x002222, transparent: true });
+  solidEarthBGMaterial = new THREE.MeshLambertMaterial({ color: 0x111111 }); // solid(实色) 地球bg材质
+  realEarthBGMaterial!: THREE.MeshBasicMaterial; // real(🌏) 地球bg材质
+  earthBG!: THREE.Mesh;
   atmosphere!: THREE.Mesh; // 大气层
+  countryMeshList: THREE.Mesh[] = []; // 所有国家的 mesh 
 
   constructor(dom: HTMLDivElement) {
     super(dom);
@@ -24,13 +26,33 @@ export default class InitEarth3D extends Base {
 
     this.initCountryNameLabel();
 
-
     this.loadGeojson('/earth3d/countriesWithGDPAndCenter.json')
       .then(features => {
-
         // 绘制 地球
         this.drawEarth(3, features);
       });
+  }
+
+  /**
+   * 将地球在 real(🌏)  和 solid(实色) 间切换
+   */
+  switchRealOrSolidEarthBG(isReal: boolean) {
+    this.atmosphere.visible = isReal;
+
+    // country mesh 的透明度
+    this.countryMeshMaterial.opacity = isReal
+      ? 0.2
+      : 1;
+
+    // 地球背景切换
+    this.earthBG.material = isReal
+      ? this.realEarthBGMaterial
+      : this.solidEarthBGMaterial;
+
+    // 国家边界线颜色切换
+    this.edgeLineMaterial.color = isReal 
+      ? new THREE.Color(0xffffff)
+      : new THREE.Color(43690);
   }
 
   /**
@@ -41,9 +63,7 @@ export default class InitEarth3D extends Base {
    * @param r 
    * @param features 
    */
-  drawEarth(r = 3, features: FeatureCollection<MultiPolygonCoord>['features']) {
-    this.R = r;
-
+  private drawEarth(r = 3, features: FeatureCollection<MultiPolygonCoord>['features']) {
     features.forEach(feature => {
       let { type, coordinates } = feature.geometry;
 
@@ -59,13 +79,14 @@ export default class InitEarth3D extends Base {
       const mesh = this.drawCountryMesh(coordinates, r);
       mesh.userData.properties = feature.properties;
       mesh.name = feature.properties.name;
+      this.countryMeshList.push(mesh);
     });
 
     // 3. 绘制地球的 bg
-    this.drawEarthBgWithGlow(r);
+    this.earthBG = this.drawEarthBgWithGlow(r);
 
     // 4. 绘制流动的大气层 
-    this.drawAtmosphere(r)
+    this.atmosphere = this.drawAtmosphere(r)
   }
 
   /**
@@ -89,9 +110,11 @@ export default class InitEarth3D extends Base {
       texture.offset.y += 0.00005;
     });
 
-    this.atmosphere = new THREE.Mesh(geometry, material);
-    this.atmosphere.visible = false;
-    this.scene.add(this.atmosphere);
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.visible = false;
+    this.scene.add(mesh);
+
+    return mesh;
   }
 
   /**
@@ -99,10 +122,13 @@ export default class InitEarth3D extends Base {
    * @param r 
    */
   private drawEarthBgWithGlow(r: number) {
+    this.realEarthBGMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      map: this.textureLoader.load('/earth3d/earth.jpg')
+    })
     // 地球（纯色、黑色）壳子
     const geoEarthBg = new THREE.SphereGeometry(r - 0.005, 50, 50);
-    const earthBg = new THREE.Mesh(geoEarthBg, this.matEarthBg);
-    this.matEarthBg.userData.type = EarthBGType.SOLID;
+    const earthBg = new THREE.Mesh(geoEarthBg, this.solidEarthBGMaterial);
 
     // ----- 使用精灵图 制作 地球光晕 -----
     const spriteMaterial = new THREE.SpriteMaterial({
