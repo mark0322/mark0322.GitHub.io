@@ -18,6 +18,7 @@ export class Base extends Emitter {
   private options: Options
   private deltaFPS = 0 // 限制 刷新率时刷用
   private isOpenCss2D = false
+  private isOpenCss3D = false
 
   dom!: HTMLDivElement
   renderer!: THREE.WebGLRenderer
@@ -47,7 +48,7 @@ export class Base extends Emitter {
 
 
   // temp
-  box(size = 0.5, color = 0xffffff) {
+  protected box(size = 0.5, color = 0xffffff) {
     const geometry = new THREE.BoxGeometry(size, size, size)
     const material = new THREE.MeshBasicMaterial({ color })
     return new THREE.Mesh(geometry, material)
@@ -63,7 +64,7 @@ export class Base extends Emitter {
 
 
   // 开启 css2D 渲染器（单例模式）
-  openCSS2DRenderer() {
+  private openCSS2DRenderer() {
     if (this.isOpenCss2D) return
 
     this.isOpenCss2D = true
@@ -103,7 +104,7 @@ export class Base extends Emitter {
     } 
     * @returns 
   */
-  createLabel_CSS2D(text: string, pos = new THREE.Vector3(), options = {}) {
+  protected createLabel_CSS2D(text: string, pos = new THREE.Vector3(), options = {}) {
 
     options = Object.assign(
       {
@@ -124,12 +125,17 @@ export class Base extends Emitter {
     const label = new CSS2DObject(div)
     label.position.copy(pos)
 
+    this.openCSS2DRenderer()
 
     return label
   }
 
   // 开启 css3D 渲染器
-  openCSS3DRenderer() {
+  private openCSS3DRenderer() {
+    if (this.isOpenCss3D) return
+
+    this.isOpenCss3D = true
+
     const labelRenderer = new CSS3DRenderer()
 
     labelRenderer.setSize(this.dom.offsetWidth, this.dom.offsetHeight)
@@ -165,7 +171,7 @@ export class Base extends Emitter {
     * @param { scale, rotateX }
     * @returns {CSS3DObject}
   */
-  createLabel_CSS3D(text: string, pos = new THREE.Vector3(), cssOptions = {}, {scale, rotateX} = {scale: 1, rotateX: Math.PI}) {
+  protected createLabel_CSS3D(text: string, pos = new THREE.Vector3(), cssOptions = {}, {scale, rotateX} = {scale: 1, rotateX: Math.PI}) {
     cssOptions = Object.assign({
       padding: '5px 10px',
       color: '#fff',
@@ -199,7 +205,7 @@ export class Base extends Emitter {
    * @param param0 
    * @param meshList 
    */
-  rayCast([x, y]: [number, number], meshList: THREE.Object3D[]) {
+  protected rayCast([x, y]: [number, number], meshList: THREE.Object3D[]) {
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
 
@@ -211,14 +217,14 @@ export class Base extends Emitter {
     return raycaster.intersectObjects(meshList);
   }
 
-  disposeFn(obj: { dispose?: () => void }) {
+  protected disposeFn(obj: { dispose?: () => void }) {
     if (typeof obj.dispose === 'function') {
       obj.dispose()
     }
   }
 
   // 清空释放 parent 下所有 内存
-  disposeChildren(parent: THREE.Group | THREE.Scene) {
+  private disposeChildren(parent: THREE.Group | THREE.Scene) {
     parent.traverse((ele) => {
       const obj = ele as THREE.Mesh<THREE.BufferGeometry, THREE.Material> & { dispose?: () => void }
 
@@ -259,7 +265,7 @@ export class Base extends Emitter {
   }
 
   // 屏幕 宽高 自适应
-  onResize = () => {
+  private onResize = () => {
     this.w = this.dom.offsetWidth
     this.h = this.dom.offsetHeight
 
@@ -271,7 +277,7 @@ export class Base extends Emitter {
     this.renderer.setSize(this.w, this.h)
     this.renderer.setPixelRatio(window.devicePixelRatio)
 
-    this.css3DRenderer.setSize(this.w, this.h);
+    this.css3DRenderer && this.css3DRenderer.setSize(this.w, this.h);
     this.css2DRenderer && this.css2DRenderer.setSize(this.w, this.h);
   }
 
@@ -299,7 +305,6 @@ export class Base extends Emitter {
 
     this._animate(0)
   }
-
 
   /**
    *
