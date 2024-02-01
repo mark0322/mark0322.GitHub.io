@@ -84,6 +84,19 @@ export class Base extends Emitter {
     }, 1000)
   }
 
+  /**
+   * 根据 给定的 points 和 材质 绘制 line
+   * @param points 
+   * @param material 
+   * @returns 
+   */
+  drawLine(points: number[], material = new THREE.LineBasicMaterial({ color: 0x3399eee })) {
+    const pointsBuffer = new Float32Array(points);
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(pointsBuffer, 3));
+    return new THREE.Line(geometry, material);
+  }
+
   // 开启 css2D 渲染器（单例模式）
   openCSS2DRenderer() {
     if (this.isOpenCss2D) return
@@ -232,7 +245,7 @@ export class Base extends Emitter {
     dom.appendChild(this.renderer.domElement)
 
     // 相机
-    this.camera = new THREE.PerspectiveCamera(75, this.w / this.h, 0.1, 100000)
+    this.camera = new THREE.PerspectiveCamera(75, this.w / this.h, 1, 100000)
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
 

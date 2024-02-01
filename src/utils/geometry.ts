@@ -26,7 +26,7 @@ export function pointInPolygon(point: PointCoord, vs: PointCoord[]) {
  * @param option 
  * @returns 
  */
-export function createGridByEdge(edgeLine: PointCoord[], option: createGridByEdgeOption) {
+export function createGridByEdge(edgeLine: PointCoord[], option: createGridByEdgeOption = {}) {
   const { rowNum, colNum } = {
     rowNum: 20,
     colNum: 10,
