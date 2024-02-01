@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import gsap from "gsap";
 import Delaunator from 'delaunator';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
@@ -27,13 +28,15 @@ export default class InitEarth3D extends Base {
   private countriesMesh: Mesh[] = []; // 所有国家的 mesh
   private scaleBar = new THREE.Vector3(1, 1, 0); // bar 的生长动画，由 scaleZ 决定
   private scaleH!: ScalePower<number, number, never>;
+  private annualGDPList!: [{text: string/* 国家名 */}, {text: string/* unit */}, {text: string/* year */}, {text: string/* gdp */}][];
+  private gBars!: THREE.Group; // 所有 gdp bar 的 group
 
-  gdpBarControler!: {show: () => void; hide: () => void;};
+  gdpBarControler!: {show: () => Promise<undefined>; hide: () => Promise<undefined>;};
 
   constructor(dom: HTMLDivElement) {
     super(dom);
     this.addLight()
-    this.camera.position.set(0, 0, 6);
+    this.camera.position.set(0, 0, 8);
 
     this.initCountryNameLabel();
 
@@ -44,17 +47,63 @@ export default class InitEarth3D extends Base {
         // 绘制 地球
         this.drawEarth(r, features);
 
+        // 绘制 gdp - bar
         this.gdpBarControler = this.drawGDPBars(r, features)
       });
 
     this.bindEvent();
+
+    this.initAnnualGDP();
+  }
+
+  /**
+   * 
+   * @param year 
+   */
+  changeGDPBarsByYear(year: number) {
+    const gdpListForYear = this.annualGDPList.filter(d => d[2].text === year.toString());
+
+    this.gBars.children.forEach(meshBar => {
+      const gdpItem = gdpListForYear.find(d => d[0].text === meshBar.userData?.data?.name);
+
+      if (gdpItem) {
+        meshBar.visible = true;
+        const gdp = +gdpItem[3].text;
+        const h = this.scaleH(gdp);
+
+        const maxH = meshBar.userData.maxH;
+        (meshBar as Mesh).scale.z = this.scaleBar.z = h / maxH;
+      
+      } else {
+        meshBar.visible = false;
+      }
+    });
+  }
+
+  /**
+   * 获取 各国每年的 GPD 数据，以供 `changeGDPBarsByYear` 使用
+   */
+  private initAnnualGDP() {
+    this.fileLoader.setResponseType('json');
+    this.fileLoader.load('/earth3d/gdp.json', (res: any) => {
+      this.annualGDPList = res.Root.data.record.reduce((accu: any, curr: any) => {
+        curr = curr.field;
+        const hasName = curr[0]?.text;
+        const hasYear = curr[2]?.text;
+        const hasGDP = curr[3]?.text;
+        if (hasName && hasYear && hasGDP) {
+          accu.push(curr);
+        }
+        return accu;
+      }, []);
+    });
   }
 
   /**
    * 以 柱状图 显示 国家的 GDP
    */
-  drawGDPBars(r = 3, features: FeatureCollection<MultiPolygonCoord>['features']) {
-    const g = new THREE.Group();
+  private drawGDPBars(r = 3, features: FeatureCollection<MultiPolygonCoord>['features']) {
+    const g = this.gBars = new THREE.Group();
     g.visible = false;
     this.scene.add(g);
 
@@ -110,62 +159,55 @@ export default class InitEarth3D extends Base {
         meshBar.userData.maxH = h;
       });
 
-    // bar 的入场 和 离场动画
-    const { tweenOn, tweenHide } = (() => {
-      const tweenOn = new TWEEN.Tween(this.scaleBar)
-        .to({z: 1}, 1000)
-        .onUpdate(() => {
-          g.children.forEach(mesh => {
-            mesh.scale.copy(this.scaleBar);
-          })
-        })
-        .onStart(() => {
-          g.visible = true;
-          tweenHide.stop();
-        });
-      const tweenHide = new TWEEN.Tween(this.scaleBar)
-        .to({z: 0}, 1000)
-        .onUpdate(() => {
-          g.children.forEach(mesh => {
-            mesh.scale.copy(this.scaleBar);
+    let oGsap: gsap.core.Tween;
+    return {
+      show: (duration = 1.5) => {
+        return new Promise<undefined>((resolve) => {
+          if (oGsap) {
+            oGsap.paused(true);
+          }
+    
+          oGsap = gsap.to(this.scaleBar, {
+            z: 1,
+            duration,
+            ease: 'Power1.easeInOut',
+            onUpdate: () => {
+              g.children.forEach(mesh => {
+                mesh.scale.copy(this.scaleBar);
+              })
+            },
+            onStart: () => {
+              g.visible = true;
+            },
+            onComplete: () => {
+              resolve(undefined);
+            }
           });
         })
-        .onComplete(() => {
-          g.visible = false;
-        })
-        .onStart(() => {
-          tweenOn.stop();
-        });
-  
-      // 开启 动画 驱动
-      this.animate.add((time) => {
-        TWEEN.update(time);
-      });
-      return { tweenOn, tweenHide }
-    })();
-
-    // { // 获取 各国每年的 GPD 数据，以供 `changeGDPBarsByYear` 使用
-    //   this.fileLoader.setResponseType('json');
-    //   this.fileLoader.load('/gdp.json', (res: any) => {
-    //     this.gdpList = res.Root.data.record.reduce((accu: any, curr: any) => {
-    //       curr = curr.field;
-    //       const hasName = curr[0]?.text;
-    //       const hasYear = curr[2]?.text;
-    //       const hasGDP = curr[3]?.text;
-    //       if (hasName && hasYear && hasGDP) {
-    //         accu.push(curr);
-    //       }
-    //       return accu;
-    //     }, []);
-    //   });
-    // }
-
-    return {
-      show() {
-        tweenOn.start();
       },
-      hide() {
-        tweenHide.start();
+      hide: (duration = 1.5) => {
+        return new Promise<undefined>((resolve) => {
+          if (oGsap) {
+            oGsap.paused(true)
+          }
+  
+          oGsap = gsap.to(this.scaleBar, {
+            z: 0,
+            duration,
+            ease: 'Power1.easeInOut',
+            onUpdate: () => {
+              g.children.forEach(mesh => {
+                mesh.scale.copy(this.scaleBar);
+              })
+            },
+            onComplete: () => {
+              setTimeout(() => {
+                g.visible = false;
+                resolve(undefined);
+              }, 300)
+            }
+          })
+        })
       }
     }
   }
