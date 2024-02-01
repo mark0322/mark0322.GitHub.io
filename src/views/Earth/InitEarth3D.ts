@@ -1,23 +1,27 @@
-import { Base } from '@/three/base';
 import * as THREE from 'three';
-import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
-import type { FeatureCollection, MultiPolygonCoord, LineStringCoord, PointCoord } from '@/types/geo';
-import { lon2xyz } from '@/utils/geography';
 import Delaunator from 'delaunator';
-import { createGridByEdge, pointInPolygon } from '@/utils/geometry';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { EarthBGType } from './enum';
+import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
+import { get } from 'lodash-es';
+
+import type { FeatureCollection, MultiPolygonCoord, LineStringCoord, PointCoord } from '@/types/geo';
+import type { MeshStandard, Mesh} from '@/types';
+
+import { Base } from '@/three/base';
+import { GeometryThree } from '@/three/utils/GeometryThree';
+import { lon2xyz } from '@/utils/geography';
+import { createGridByEdge, pointInPolygon } from '@/utils/geometry';
+import { CountryColor } from './enum';
 
 
 export default class InitEarth3D extends Base {
   label!: CSS2DObject;
-  edgeLineMaterial = new THREE.LineBasicMaterial({ color: 43690 });
-  countryMeshMaterial = new THREE.MeshPhongMaterial({ color: 0x002222, transparent: true });
-  solidEarthBGMaterial = new THREE.MeshLambertMaterial({ color: 0x111111 }); // solid(实色) 地球bg材质
+  edgeLineMaterial = new THREE.LineBasicMaterial({ color: 0x00aaaa });
+  solidEarthBGMaterial = new THREE.MeshLambertMaterial({ color: 0x111111, side: THREE.DoubleSide }); // solid(实色) 地球bg材质
   realEarthBGMaterial!: THREE.MeshBasicMaterial; // real(🌏) 地球bg材质
   earthBG!: THREE.Mesh;
   atmosphere!: THREE.Mesh; // 大气层
-  countryMeshList: THREE.Mesh[] = []; // 所有国家的 mesh 
+  countriesMesh: Mesh[] = []; // 所有国家的 mesh 
 
   constructor(dom: HTMLDivElement) {
     super(dom);
@@ -31,6 +35,42 @@ export default class InitEarth3D extends Base {
         // 绘制 地球
         this.drawEarth(3, features);
       });
+
+    this.bindEvent();
+  }
+
+  private onDblClick = (() => {
+    let selectedMesh: MeshStandard;
+
+    return (event: MouseEvent) => {
+      // 取消上一次 被选中的 country mesh
+      if (selectedMesh) {
+        selectedMesh.material.color = new THREE.Color(CountryColor.normal);
+      }
+
+      const { offsetX: x, offsetY: y } = event;
+      const target = this.rayCast([x, y], this.countriesMesh);
+
+      if (target.length > 0) {
+        selectedMesh = target[0].object as MeshStandard;
+        selectedMesh.material.color = new THREE.Color(CountryColor.selected);
+  
+        const targetProps = get(target[0], 'object.userData.properties', {});
+        console.log('click', targetProps);
+
+
+        // this.label.position.copy()
+        // this.label.element.innerText = targetProps.name || '--';
+      }
+    }
+  })();
+
+  private bindEvent() {
+    this.dom.addEventListener('dblclick', this.onDblClick);
+  }
+
+  removeEvent() {
+    this.dom.removeEventListener('dblclick', this.onDblClick);
   }
 
   /**
@@ -40,9 +80,12 @@ export default class InitEarth3D extends Base {
     this.atmosphere.visible = isReal;
 
     // country mesh 的透明度
-    this.countryMeshMaterial.opacity = isReal
-      ? 0.2
-      : 1;
+    this.countriesMesh.forEach(mesh => {
+      mesh.material.opacity = isReal
+        ? 0.2
+        : 1;
+    });
+
 
     // 地球背景切换
     this.earthBG.material = isReal
@@ -52,7 +95,7 @@ export default class InitEarth3D extends Base {
     // 国家边界线颜色切换
     this.edgeLineMaterial.color = isReal 
       ? new THREE.Color(0xffffff)
-      : new THREE.Color(43690);
+      : new THREE.Color(0x00aaaa);
   }
 
   /**
@@ -79,7 +122,7 @@ export default class InitEarth3D extends Base {
       const mesh = this.drawCountryMesh(coordinates, r);
       mesh.userData.properties = feature.properties;
       mesh.name = feature.properties.name;
-      this.countryMeshList.push(mesh);
+      this.countriesMesh.push(mesh);
     });
 
     // 3. 绘制地球的 bg
@@ -123,6 +166,7 @@ export default class InitEarth3D extends Base {
    */
   private drawEarthBgWithGlow(r: number) {
     this.realEarthBGMaterial = new THREE.MeshBasicMaterial({
+      side: THREE.DoubleSide,
       color: 0xffffff,
       map: this.textureLoader.load('/earth3d/earth.jpg')
     })
@@ -196,7 +240,10 @@ export default class InitEarth3D extends Base {
     });
 
     const geometry = mergeGeometries(geometries);
-    const material = this.countryMeshMaterial;
+    const material = new THREE.MeshPhongMaterial({ 
+      color: CountryColor.normal, 
+      transparent: true
+    });
 
     const mesh = new THREE.Mesh(geometry, material);
     this.scene.add(mesh);
@@ -217,7 +264,7 @@ export default class InitEarth3D extends Base {
           return lon2xyz(r + 0.0001, ...point2d);
         });
 
-        lineGroup.add(this.drawLine(point3dList, this.edgeLineMaterial));
+        lineGroup.add(GeometryThree.drawLine(point3dList, this.edgeLineMaterial));
       });
     });
 

@@ -26,7 +26,7 @@ export function pointInPolygon(point: PointCoord, vs: PointCoord[]) {
  * @param option 
  * @returns 
  */
-export function createGridByEdge(edgeLine: PointCoord[], option: createGridByEdgeOption = {}) {
+export function createGridByEdge(edgeLine: PointCoord[], option: CreateGridByEdgeOption = {}) {
   const { rowNum, colNum } = {
     rowNum: 20,
     colNum: 10,
@@ -46,9 +46,9 @@ export function createGridByEdge(edgeLine: PointCoord[], option: createGridByEdg
     for (let colIndex = 0; colIndex <= colNum; colIndex++) {
       const x = minX + rowIndex * rowStep;
       const y = minY + colIndex * colStep;
-      const isInPolygon = pointInPolygon([x, y], edgeLine as PointCoord[]);
+      const isInPolygon = pointInPolygon([x, y], edgeLine);
       if (isInPolygon) {
-        gridList.push([x, y])
+        gridList.push([x, y]);
       }
     }
   }
@@ -56,7 +56,7 @@ export function createGridByEdge(edgeLine: PointCoord[], option: createGridByEdg
   return gridList;
 }
 
-export interface createGridByEdgeOption {
+export interface CreateGridByEdgeOption {
   /**
    * 横向创建多少个 grid点
    * @default 20

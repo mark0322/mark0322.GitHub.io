@@ -20,6 +20,9 @@ export default class Init extends Base {
 
   constructor(dom: HTMLDivElement) {
     super(dom);
+
+    this.openCSS3DRenderer()
+
     // 初始化摄像机位置
     this.camera.position.copy(this.cameraInitialPos.clone())
     this.controls.target.set(0, 12.7, 0);

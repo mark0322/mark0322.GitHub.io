@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { Animate } from './Animate'
-import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer.js'
+import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js'
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import Emitter from '@/utils/Emitter'
 
@@ -43,31 +43,8 @@ export class Base extends Emitter {
     this.init(dom)
 
     window.addEventListener('resize', this.onResize);
-
-    this.openCSS3DRenderer()
   }
 
-  // 开启 css3D 渲染器
-  openCSS3DRenderer() {
-    const labelRenderer = new CSS3DRenderer()
-
-    labelRenderer.setSize(this.dom.offsetWidth, this.dom.offsetHeight)
-    labelRenderer.domElement.style.position = 'absolute'
-    // 避免renderer.domElement影响HTMl标签定位，设置top为0px
-    labelRenderer.domElement.style.top = '0px'
-    labelRenderer.domElement.style.left = '0px'
-
-    //设置.pointerEvents=none，以免模型标签HTML元素遮挡鼠标选择场景模型
-    labelRenderer.domElement.style.pointerEvents = 'none'
-
-    this.dom.appendChild(labelRenderer.domElement)
-
-    this.animate.add(() => {
-      labelRenderer.render(this.scene, this.camera)
-    })
-
-    this.css3DRenderer = labelRenderer;
-  }
 
   // temp
   box(size = 0.5, color = 0xffffff) {
@@ -84,18 +61,6 @@ export class Base extends Emitter {
     }, 1000)
   }
 
-  /**
-   * 根据 给定的 points 和 材质 绘制 line
-   * @param points 
-   * @param material 
-   * @returns 
-   */
-  drawLine(points: number[], material = new THREE.LineBasicMaterial({ color: 0x3399eee })) {
-    const pointsBuffer = new Float32Array(points);
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(pointsBuffer, 3));
-    return new THREE.Line(geometry, material);
-  }
 
   // 开启 css2D 渲染器（单例模式）
   openCSS2DRenderer() {
@@ -161,6 +126,89 @@ export class Base extends Emitter {
 
 
     return label
+  }
+
+  // 开启 css3D 渲染器
+  openCSS3DRenderer() {
+    const labelRenderer = new CSS3DRenderer()
+
+    labelRenderer.setSize(this.dom.offsetWidth, this.dom.offsetHeight)
+    labelRenderer.domElement.style.position = 'absolute'
+    // 避免renderer.domElement影响HTMl标签定位，设置top为0px
+    labelRenderer.domElement.style.top = '0px'
+    labelRenderer.domElement.style.left = '0px'
+
+    //设置.pointerEvents=none，以免模型标签HTML元素遮挡鼠标选择场景模型
+    labelRenderer.domElement.style.pointerEvents = 'none'
+
+    this.dom.appendChild(labelRenderer.domElement)
+
+    this.animate.add(() => {
+      labelRenderer.render(this.scene, this.camera)
+    })
+
+    this.css3DRenderer = labelRenderer;
+  }
+
+  /**
+   * 创建 CSS3D Label
+   * @param text 
+   * @param pos 默认值 (0, 0, 0)
+   * @param cssOptions 默认值 {
+      padding: '5px 10px',
+      color: '#fff',
+      fontSize: '16px',
+      position: 'absolute',
+      backgroundColor: 'rgba(25,25,25,0.5)',
+      borderRadius: '5px',
+    } 
+    * @param { scale, rotateX }
+    * @returns {CSS3DObject}
+  */
+  createLabel_CSS3D(text: string, pos = new THREE.Vector3(), cssOptions = {}, {scale, rotateX} = {scale: 1, rotateX: Math.PI}) {
+    cssOptions = Object.assign({
+      padding: '5px 10px',
+      color: '#fff',
+      fontSize: '16px',
+      position: 'absolute',
+      backgroundColor: 'rgba(25,25,25,0.5)',
+      borderRadius: '5px',
+      pointerEvents: 'none' //避免HTML标签遮挡三维场景的鼠标事件
+    }, cssOptions);
+
+    const div = document.createElement('div');
+    div.innerText = text;
+
+    Object.entries(cssOptions)
+      .forEach(([k, v]) => {
+        (div.style as CSSStyleDeclaration & { [k: string]: any })[k] = v;
+      });
+
+    const label = new CSS3DObject(div);
+    label.scale.setScalar(scale)
+    label.rotateX(rotateX);
+    label.position.copy(pos);
+
+    this.openCSS3DRenderer()
+
+    return label;
+  }
+
+  /**
+   * 根据 相对 画布的坐标，获取 meshList 中的 Mesh
+   * @param param0 
+   * @param meshList 
+   */
+  rayCast([x, y]: [number, number], meshList: THREE.Object3D[]) {
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+
+    pointer.x = ( x / this.dom.offsetWidth ) * 2 - 1;
+    pointer.y = - ( y / this.dom.offsetHeight ) * 2 + 1;
+
+    raycaster.setFromCamera(pointer, this.camera);
+
+    return raycaster.intersectObjects(meshList);
   }
 
   disposeFn(obj: { dispose?: () => void }) {

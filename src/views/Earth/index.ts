@@ -16,6 +16,7 @@ export function useThree(el: Ref<HTMLDivElement>) {
   });
   onBeforeUnmount(() => {
     oThree.value?.dispose()
+    oThree.value?.removeEvent()
   });
   return oThree
 }
