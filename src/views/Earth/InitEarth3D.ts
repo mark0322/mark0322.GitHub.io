@@ -3,7 +3,10 @@ import Delaunator from 'delaunator';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { get } from 'lodash-es';
+import { max, scaleSqrt } from 'd3';
+import * as TWEEN from 'three/examples/jsm/libs/tween.module.js';
 
+import type {ScalePower} from 'd3';
 import type { FeatureCollection, MultiPolygonCoord, LineStringCoord, PointCoord } from '@/types/geo';
 import type { MeshStandard, Mesh} from '@/types';
 
@@ -21,7 +24,11 @@ export default class InitEarth3D extends Base {
   private realEarthBGMaterial!: THREE.MeshBasicMaterial; // real(🌏) 地球bg材质
   private earthBG!: THREE.Mesh;
   private atmosphere!: THREE.Mesh; // 大气层
-  private countriesMesh: Mesh[] = []; // 所有国家的 mesh 
+  private countriesMesh: Mesh[] = []; // 所有国家的 mesh
+  private scaleBar = new THREE.Vector3(1, 1, 0); // bar 的生长动画，由 scaleZ 决定
+  private scaleH!: ScalePower<number, number, never>;
+
+  gdpBarControler!: {show: () => void; hide: () => void;};
 
   constructor(dom: HTMLDivElement) {
     super(dom);
@@ -32,11 +39,135 @@ export default class InitEarth3D extends Base {
 
     this.loadGeojson('/earth3d/countriesWithGDPAndCenter.json')
       .then(features => {
+        const r = 3;
+
         // 绘制 地球
-        this.drawEarth(3, features);
+        this.drawEarth(r, features);
+
+        this.gdpBarControler = this.drawGDPBars(r, features)
       });
 
     this.bindEvent();
+  }
+
+  /**
+   * 以 柱状图 显示 国家的 GDP
+   */
+  drawGDPBars(r = 3, features: FeatureCollection<MultiPolygonCoord>['features']) {
+    const g = new THREE.Group();
+    g.visible = false;
+    this.scene.add(g);
+
+    const matBar = new THREE.MeshLambertMaterial({
+      vertexColors: true
+    });
+
+    const maxGDP = max(features, d => d.properties.gdp)!;
+    const maxH = 2;
+
+    // 指数比例尺，将 gdp 的值 映射至 柱子高度
+    this.scaleH = scaleSqrt([0, maxGDP], [0, maxH]);
+
+    const color1 = new THREE.Color(0x00aaaa);
+    const color2 = new THREE.Color(0x44eeee);
+
+    // 过滤出 包含 gdp 和 center 的国家，以便绘制 bars
+    features.filter(feature => (feature.properties.gdp > 0) && Array.isArray(feature.properties.center))
+      .forEach(feature => {
+        const {gdp, center} = feature.properties;
+
+        const h = this.scaleH(gdp);
+        const geoBar = new THREE.BoxGeometry(.04, .04, h);
+
+        // bar 使用 顶点颜色
+        const color = color1.clone().lerp(color2, h / maxH);
+        const colorArr = [];//几何体所有顶点颜色数据
+        const pos = geoBar.attributes.position;
+        for (let j = 0; j < pos.count; j++) {// pos.count表示几何体geometry顶点数量
+          // 不同高度柱子颜色明暗不同，同一个柱子从下到上颜色不同
+          if (pos.getZ(j) < 0) {//柱子几何体底部顶点对应颜色
+            colorArr.push(color.r * 0.1, color.g * 0.1, color.b * 0.1);
+          } else {//柱子几何体顶部顶点对应颜色
+            colorArr.push(color.r * 1, color.g * 1, color.b * 1);
+          }
+        }
+        //设置几何体 顶点颜色数据
+        geoBar.attributes.color = new THREE.BufferAttribute(new Float32Array(colorArr), 3);
+
+        const meshBar = new THREE.Mesh(geoBar, matBar);
+        const [x, y, z] = gps2xyz(r, ...center);
+        meshBar.position.set(x, y, z);
+        meshBar.geometry.translate(0, 0, h / 2)
+        // 目标旋转角
+        const targetRotate = new THREE.Vector3(x, y, z).normalize();
+        // 初始旋转角
+        const initRotate = new THREE.Vector3(0, 0, 1);
+        meshBar.quaternion.setFromUnitVectors(initRotate, targetRotate);
+
+        g.add(meshBar);
+
+        meshBar.userData.data = feature.properties;
+        meshBar.userData.maxH = h;
+      });
+
+    // bar 的入场 和 离场动画
+    const { tweenOn, tweenHide } = (() => {
+      const tweenOn = new TWEEN.Tween(this.scaleBar)
+        .to({z: 1}, 1000)
+        .onUpdate(() => {
+          g.children.forEach(mesh => {
+            mesh.scale.copy(this.scaleBar);
+          })
+        })
+        .onStart(() => {
+          g.visible = true;
+          tweenHide.stop();
+        });
+      const tweenHide = new TWEEN.Tween(this.scaleBar)
+        .to({z: 0}, 1000)
+        .onUpdate(() => {
+          g.children.forEach(mesh => {
+            mesh.scale.copy(this.scaleBar);
+          });
+        })
+        .onComplete(() => {
+          g.visible = false;
+        })
+        .onStart(() => {
+          tweenOn.stop();
+        });
+  
+      // 开启 动画 驱动
+      this.animate.add((time) => {
+        TWEEN.update(time);
+      });
+      return { tweenOn, tweenHide }
+    })();
+
+    // { // 获取 各国每年的 GPD 数据，以供 `changeGDPBarsByYear` 使用
+    //   this.fileLoader.setResponseType('json');
+    //   this.fileLoader.load('/gdp.json', (res: any) => {
+    //     this.gdpList = res.Root.data.record.reduce((accu: any, curr: any) => {
+    //       curr = curr.field;
+    //       const hasName = curr[0]?.text;
+    //       const hasYear = curr[2]?.text;
+    //       const hasGDP = curr[3]?.text;
+    //       if (hasName && hasYear && hasGDP) {
+    //         accu.push(curr);
+    //       }
+    //       return accu;
+    //     }, []);
+    //   });
+    // }
+
+    return {
+      show() {
+        tweenOn.start();
+      },
+      hide() {
+        tweenHide.start();
+      }
+    }
   }
 
   private onDblClick = (() => {

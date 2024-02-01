@@ -17,7 +17,7 @@ const refEl = ref<HTMLDivElement>()
 const oThree = useThree(refEl as Ref<HTMLDivElement>);
 
 const isReal = useRealOrSolid()
-const isShowGDP = ref(false)
+const isShowGDP = useToggleGDP();
 
 // ----
 function useRealOrSolid() {
@@ -26,6 +26,14 @@ function useRealOrSolid() {
     oThree.value?.switchRealOrSolidEarthBG(isReal.value)
   });
   return isReal;
+}
+
+function useToggleGDP() {
+  const isShowGDP = ref(false)
+  watch(isShowGDP, () => {
+    oThree.value?.gdpBarControler?.[isShowGDP.value ? 'show' : 'hide']()
+  })
+  return isShowGDP;
 }
 
 
