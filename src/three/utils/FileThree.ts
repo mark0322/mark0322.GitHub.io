@@ -41,12 +41,11 @@ export class FileThree {
    * 保存画布保存在 图片
    * 注：渲染器必须开启：preserveDrawingBuffer: true
    */
-  static saveAsPNG(renderer: THREE.WebGLRenderer, imgName = 'img') {
+  static saveAsPNG(canvas: HTMLCanvasElement, imgName = 'img') {
     // 创建一个超链接元素，用来下载保存数据的文件
     const link = document.createElement('a');
 
     // 通过超链接herf属性，设置要保存到文件中的数据
-    const canvas = renderer.domElement;//获取canvas对象
     link.href = canvas.toDataURL("image/png");
     link.download = `${imgName}.png`; //下载文件名
     link.click();

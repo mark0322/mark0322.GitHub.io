@@ -9,19 +9,19 @@ import type { MeshStandard, Mesh} from '@/types';
 
 import { Base } from '@/three/base';
 import { GeometryThree } from '@/three/utils/GeometryThree';
-import { lon2xyz } from '@/utils/geography';
+import { gps2xyz } from '@/utils/geography';
 import { createGridByEdge, pointInPolygon } from '@/utils/geometry';
 import { CountryColor } from './enum';
 
-
 export default class InitEarth3D extends Base {
-  label!: CSS2DObject;
-  edgeLineMaterial = new THREE.LineBasicMaterial({ color: 0x00aaaa });
-  solidEarthBGMaterial = new THREE.MeshLambertMaterial({ color: 0x111111, side: THREE.DoubleSide }); // solid(实色) 地球bg材质
-  realEarthBGMaterial!: THREE.MeshBasicMaterial; // real(🌏) 地球bg材质
-  earthBG!: THREE.Mesh;
-  atmosphere!: THREE.Mesh; // 大气层
-  countriesMesh: Mesh[] = []; // 所有国家的 mesh 
+  private r!: number; // 地球的半径
+  private label!: CSS2DObject;
+  private edgeLineMaterial = new THREE.LineBasicMaterial({ color: 0x00aaaa });
+  private solidEarthBGMaterial = new THREE.MeshLambertMaterial({ color: 0x111111, side: THREE.DoubleSide }); // solid(实色) 地球bg材质
+  private realEarthBGMaterial!: THREE.MeshBasicMaterial; // real(🌏) 地球bg材质
+  private earthBG!: THREE.Mesh;
+  private atmosphere!: THREE.Mesh; // 大气层
+  private countriesMesh: Mesh[] = []; // 所有国家的 mesh 
 
   constructor(dom: HTMLDivElement) {
     super(dom);
@@ -48,6 +48,9 @@ export default class InitEarth3D extends Base {
         selectedMesh.material.color = new THREE.Color(CountryColor.normal);
       }
 
+      // 每次点击，先隐藏 label
+      this.label.visible = false;
+
       const { offsetX: x, offsetY: y } = event;
       const target = this.rayCast([x, y], this.countriesMesh);
 
@@ -56,11 +59,18 @@ export default class InitEarth3D extends Base {
         selectedMesh.material.color = new THREE.Color(CountryColor.selected);
   
         const targetProps = get(target[0], 'object.userData.properties', {});
-        console.log('click', targetProps);
 
-
-        // this.label.position.copy()
-        // this.label.element.innerText = targetProps.name || '--';
+        const labelPos = new THREE.Vector3();
+        if (Array.isArray(targetProps.center)) {
+          const [lon, lat] = targetProps.center;
+          labelPos.set(...gps2xyz(this.r, lon, lat));
+        } else {
+          const {center} = GeometryThree.computeBox3(selectedMesh)
+          labelPos.copy(center);
+        }
+        this.label.visible = true;
+        this.label.position.copy(labelPos);
+        this.label.element.innerText = targetProps.name || '--';
       }
     }
   })();
@@ -107,6 +117,8 @@ export default class InitEarth3D extends Base {
    * @param features 
    */
   private drawEarth(r = 3, features: FeatureCollection<MultiPolygonCoord>['features']) {
+    this.r = r;
+
     features.forEach(feature => {
       let { type, coordinates } = feature.geometry;
 
@@ -208,7 +220,7 @@ export default class InitEarth3D extends Base {
         const indexArr = delaunator.triangles;
         const geometry = new THREE.BufferGeometry();
         geometry.setFromPoints(totalPoints.map((point2d) => {
-          return new THREE.Vector3(...lon2xyz(r, ...point2d));
+          return new THREE.Vector3(...gps2xyz(r, ...point2d));
         }));
 
         // 3、目的：除去 polygon 外围的 mesh 三角
@@ -261,7 +273,7 @@ export default class InitEarth3D extends Base {
     multiPolygon.forEach(polygon => {
       polygon.forEach(lineStringCoord => {
         const point3dList = lineStringCoord.flatMap((point2d) => {
-          return lon2xyz(r + 0.0001, ...point2d);
+          return gps2xyz(r + 0.0001, ...point2d);
         });
 
         lineGroup.add(GeometryThree.drawLine(point3dList, this.edgeLineMaterial));
@@ -272,7 +284,11 @@ export default class InitEarth3D extends Base {
   }
 
   private initCountryNameLabel() {
-    this.label = this.createLabel_CSS2D('');
+    this.label = this.createLabel_CSS2D('', new THREE.Vector3(), {
+      padding: '5px 10px',
+      backgroundColor: 'rgba(25,25,25,0.5)',
+      borderRadius: '5px',
+    });
     this.label.visible = false;
     this.scene.add(this.label);
   }

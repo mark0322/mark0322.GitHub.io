@@ -5,7 +5,7 @@
  * @param 纬度(角度值) latitude
  * @returns 3D空间坐标 [x, y, z]
  */
-export function lon2xyz(R: number,longitude: number,latitude: number) {
+export function gps2xyz(R: number,longitude: number,latitude: number): [number, number, number] {
   let lon = longitude * Math.PI / 180;//转弧度值
   const lat = latitude * Math.PI / 180;//转弧度值
   lon = -lon;// three.js坐标系z坐标轴对应经度-90度，而不是90度
