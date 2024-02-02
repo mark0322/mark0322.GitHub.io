@@ -30,7 +30,7 @@ export default class InitEarth3D extends Base {
   private annualGDPList!: {gdp: string; name: string; year: string}[];
   private gBars!: THREE.Group; // 所有 gdp bar 的 group
 
-  gdpBarControler!: {show: () => Promise<undefined>; hide: () => Promise<undefined>;};
+  public gdpBarControler!: {show: () => Promise<undefined>; hide: () => Promise<undefined>;};
 
   constructor(dom: HTMLDivElement) {
     super(dom);
@@ -79,7 +79,7 @@ export default class InitEarth3D extends Base {
    * 
    * @param year 
    */
-  changeGDPBarsByYear(year: number) {
+  public changeGDPBarsByYear(year: number) {
     const gdpListForYear = this.annualGDPList.filter(d => d.year === year.toString());
 
     this.gBars.children.forEach(meshBar => {
@@ -211,10 +211,8 @@ export default class InitEarth3D extends Base {
               })
             },
             onComplete: () => {
-              setTimeout(() => {
-                g.visible = false;
-                resolve(undefined);
-              }, 300)
+              g.visible = false;
+              resolve(undefined);
             }
           })
         })
@@ -262,14 +260,14 @@ export default class InitEarth3D extends Base {
     this.dom.addEventListener('dblclick', this.onDblClick);
   }
 
-  removeEvent() {
+  public removeEvent() {
     this.dom.removeEventListener('dblclick', this.onDblClick);
   }
 
   /**
    * 将地球在 real(🌏)  和 solid(实色) 间切换
    */
-  switchRealOrSolidEarthBG(isReal: boolean) {
+  public switchRealOrSolidEarthBG(isReal: boolean) {
     this.atmosphere.visible = isReal;
 
     // country mesh 的透明度
@@ -323,6 +321,54 @@ export default class InitEarth3D extends Base {
 
     // 4. 绘制流动的大气层 
     this.atmosphere = this.drawAtmosphere(r)
+
+    // 5. 以 动画圆点 绘制 国家的首都
+    this.drawCapitalPoint(r, features);
+  }
+
+  /**
+   * 圆点动画，给 首都 打点
+   * @param r 
+   * @param features 
+   */
+  private drawCapitalPoint(r: number, features: FeatureCollection<MultiPolygonCoord>['features']) {
+    const g = new THREE.Group();
+    g.name = 'CapitalsPoint';
+    this.scene.add(g);
+
+    const createPointMark = GeometryThree.createTexturePlaneFactory('/pointRing.png', {});
+
+    features.forEach(feature => {
+      const center = feature.properties.center;
+      if (Array.isArray(center)) {
+        const [x, y, z] = gps2xyz(r, center[0], center[1]);
+        const pointMark = createPointMark(0.05, new THREE.Vector3(x, y, z));
+        g.add(pointMark);
+
+        // ----- 将 圆环标记 角度调整，以贴合在 🌏 上 -----
+        const vTo = new THREE.Vector3(x, y, z).normalize();
+        // mesh默认在XOY平面上，法线方向沿着z轴new THREE.Vector3(0, 0, 1)
+        const vFrom = new THREE.Vector3(0, 0, 1);
+        // 求 从 from 旋转到 to ，需要旋转的角度，设置给 pointMark
+        pointMark.quaternion.setFromUnitVectors(vFrom, vTo);
+        // ----- 将 圆环标记 角度调整，以贴合在 🌏 上 -----
+      }
+    });
+
+    let scale = {value: 0.02};
+    gsap.to(scale, {
+      duration: 3,
+      ease: 'Power1.easeInOut',
+      value: 0.15,
+      repeat: -1,
+      yoyo: true,
+      onUpdate: () => {
+        g.children.forEach(mesh => {
+          mesh.scale.set(scale.value, scale.value, 1);
+        })
+      }
+    });
+
   }
 
   /**
@@ -479,7 +525,7 @@ export default class InitEarth3D extends Base {
    * @param url
    * @returns {Promise<FeatureCollection['features']>}
    */
-  async loadGeojson(url: string) {
+  public async loadGeojson(url: string) {
     this.fileLoader.setResponseType('json');
     const { features } = await this.fileLoader.loadAsync(url) as unknown as FeatureCollection<MultiPolygonCoord>;
     return features;

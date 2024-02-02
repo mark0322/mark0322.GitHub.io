@@ -84,8 +84,8 @@ export class GeometryThree {
    */
   static createTexturePlaneFactory: CreateTexturePlaneFactory = (url, options) => {
     const {depthTest, depthWrite, planeWidth, planeHeight, side, color} = {
-      depthTest: false,
-      depthWrite: false,
+      depthTest: true,
+      depthWrite: true,
       planeWidth: 1,
       planeHeight: 1,
       side: THREE.DoubleSide,
@@ -396,12 +396,12 @@ interface CreateTexturePlaneFactory {
     color?: number;
 
     /**
-     * @default false
+     * @default true
      */
     depthTest?: boolean;
 
     /**
-     * @default false
+     * @default true
      */
     depthWrite?: boolean;
 
