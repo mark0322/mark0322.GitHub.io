@@ -70,7 +70,7 @@ export default class InitEarth3D extends Base {
       // ----
 
       'px.jpg',
-      'nx.jpg',
+      'mx.jpg',
       'my.jpg',
       'py.jpg',
       'pz.jpg',
