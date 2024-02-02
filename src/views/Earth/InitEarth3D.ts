@@ -457,7 +457,7 @@ export default class InitEarth3D extends Base {
           return gps2xyz(r + 0.0001, ...point2d);
         });
 
-        lineGroup.add(GeometryThree.drawLine(point3dList, this.edgeLineMaterial));
+        lineGroup.add(GeometryThree.createLine(point3dList, this.edgeLineMaterial));
       });
     });
 

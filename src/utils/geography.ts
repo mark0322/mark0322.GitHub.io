@@ -18,3 +18,21 @@ export function gps2xyz(R: number,longitude: number,latitude: number): [number, 
   // 返回球面坐标
   return [x, y, z];
 }
+
+
+/* 注：使用 geoMercator 需要 沿 x 轴 旋转 90°
+  import { geoMercator } from "d3";
+  const mercatorProjection =  d3.geoMercator()
+    .center([121.49131393432617, 31.232206344604492]) // 其中一个坐标
+    .translate([0, 0])
+    .scale(10000);
+*/
+/**
+ * 将经纬度坐标 转为 墨卡托投影坐标
+ */
+export function mercatorProjection([E, N]: [number, number]) {
+  const x = E * 20037508.34 / 180;
+  let y = Math.log(Math.tan((90 + N) * Math.PI / 360)) / (Math.PI / 180);
+  y = y * 20037508.34 / 180;
+  return [x, y];
+}
