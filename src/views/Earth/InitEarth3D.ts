@@ -60,25 +60,16 @@ export default class InitEarth3D extends Base {
   private initSkyBox() {
     const textureCubeLoader = new THREE.CubeTextureLoader().setPath('/earth3d/skybox_galaxy/')
     const textureCube = textureCubeLoader.load([
-      // 'px.jpg',
-      // 'mx.jpg',
-      // 'py.jpg',
-      // 'my.jpg',
-      // 'pz.jpg',
-      // 'mz.jpg'
-
-      // ----
-
       'px.jpg',
-      'mx.jpg',
-      'my.jpg',
+      'nx.jpg',
       'py.jpg',
+      'ny.jpg',
       'pz.jpg',
-      'mz.jpg',
-    ])
+      'nz.jpg',
+    ]);
 
-    this.scene.background = textureCube
-    this.scene.environment = textureCube
+    this.scene.background = textureCube;
+    this.scene.environment = textureCube;
   }
 
   /**
