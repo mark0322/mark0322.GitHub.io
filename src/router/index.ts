@@ -18,7 +18,12 @@ const router = createRouter({
       path: '/earth',
       name: 'earch',
       component: () => import('../views/Earth/index.vue')
-    }
+    },
+    {
+      path: '/map',
+      name: 'map',
+      component: () => import('../views/Map/index.vue')
+    },
   ]
 })
 

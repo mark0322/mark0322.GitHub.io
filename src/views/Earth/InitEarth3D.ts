@@ -361,7 +361,7 @@ export default class InitEarth3D extends Base {
     gsap.to(scale, {
       duration: 3,
       ease: 'Power1.easeInOut',
-      value: 0.15,
+      value: 0.12,
       repeat: -1,
       yoyo: true,
       onUpdate: () => {

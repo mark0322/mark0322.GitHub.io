@@ -224,7 +224,7 @@ export class Base extends Emitter {
   }
 
   // 清空释放 parent 下所有 内存
-  private disposeChildren(parent: THREE.Group | THREE.Scene) {
+  protected disposeChildren(parent: THREE.Group | THREE.Scene) {
     parent.traverse((ele) => {
       const obj = ele as THREE.Mesh<THREE.BufferGeometry, THREE.Material> & { dispose?: () => void }
 
@@ -338,16 +338,18 @@ export class Base extends Emitter {
   }
 
   // temp
-  addHelper() {
+  addHelper(isShowGrid = true) {
     // 坐标轴
     const axesHelper = new THREE.AxesHelper(2000)
     axesHelper.position.z = 0.05
     this.scene.add(axesHelper)
 
     // grid
-    const gridHelper = new THREE.GridHelper(50, 50);
-    gridHelper.rotateX(Math.PI / 2);
-    this.scene.add(gridHelper);
+    if (isShowGrid) {
+      const gridHelper = new THREE.GridHelper(50, 50);
+      gridHelper.rotateX(Math.PI / 2);
+      this.scene.add(gridHelper);
+    }
   }
 
   /**
