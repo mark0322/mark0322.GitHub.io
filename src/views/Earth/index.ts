@@ -1,5 +1,4 @@
 
-import gsap from "gsap"
 import { onBeforeUnmount, onMounted, ref, type Ref } from "vue"
 
 import InitEarth3D from './InitEarth3D';

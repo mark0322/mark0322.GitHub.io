@@ -14,7 +14,6 @@ export class GeometryThree {
     box3.getCenter(center)
     const size = new THREE.Vector3()
     box3.getSize(size)
-  
 
     return {
       center,

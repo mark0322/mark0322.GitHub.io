@@ -36,13 +36,13 @@ export default class InitEarth3D extends Base {
     super(dom);
     this.addLight()
     this.camera.position.set(0, 0, 8);
-
+    
     this.initCountryNameLabel();
-
+    
+    // 地球半径
+    const r = this.r = 3;
     this.loadGeojson('/earth3d/countriesWithGDPAndCenter.json')
       .then(features => {
-        const r = 3;
-
         // 绘制 地球
         this.drawEarth(r, features);
 
@@ -280,8 +280,6 @@ export default class InitEarth3D extends Base {
    * @param features 
    */
   private drawEarth(r = 3, features: FeatureCollection<MultiPolygonCoord>['features']) {
-    this.r = r;
-
     features.forEach(feature => {
       let { type, coordinates } = feature.geometry;
 
