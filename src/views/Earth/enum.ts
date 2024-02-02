@@ -5,5 +5,5 @@ export enum EarthBGType {
 
 export enum CountryColor {
   normal = 0x002222,
-  selected = 0x00cccc
+  selected = 0x44eeee
 }

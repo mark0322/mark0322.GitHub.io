@@ -35,7 +35,6 @@ export default class InitEarth3D extends Base {
   constructor(dom: HTMLDivElement) {
     super(dom);
     this.addLight()
-    this.camera.position.set(0, 0, 8);
     
     this.initCountryNameLabel();
     
@@ -55,6 +54,10 @@ export default class InitEarth3D extends Base {
     this.fetchAnnualGDPList();
 
     this.initSkyBox();
+
+
+    this.camera.position.set(-1.748, 4.13, -6.624);
+    this.controls.minDistance = 4;
   }
   // 场景天空盒 - CubeTextureLoader
   private initSkyBox() {
@@ -334,7 +337,7 @@ export default class InitEarth3D extends Base {
     const material = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
-      opacity: 0.3,
+      opacity: 0.45,
       depthTest: false
     });
 
@@ -492,7 +495,7 @@ export default class InitEarth3D extends Base {
     directionalLight2.position.set(-400, -200, -300);
     this.scene.add(directionalLight2);
     //环境光
-    const ambient = new THREE.AmbientLight(16777215, 0.6);
+    const ambient = new THREE.AmbientLight(16777215, 0.75);
     this.scene.add(ambient);
   }
 }
