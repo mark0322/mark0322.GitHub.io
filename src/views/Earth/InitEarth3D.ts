@@ -53,6 +53,32 @@ export default class InitEarth3D extends Base {
     this.bindEvent();
 
     this.fetchAnnualGDPList();
+
+    this.initSkyBox();
+  }
+  // 场景天空盒 - CubeTextureLoader
+  private initSkyBox() {
+    const textureCubeLoader = new THREE.CubeTextureLoader().setPath('/earth3d/skybox_galaxy/')
+    const textureCube = textureCubeLoader.load([
+      // 'px.jpg',
+      // 'mx.jpg',
+      // 'py.jpg',
+      // 'my.jpg',
+      // 'pz.jpg',
+      // 'mz.jpg'
+
+      // ----
+
+      'px.jpg',
+      'nx.jpg',
+      'my.jpg',
+      'py.jpg',
+      'pz.jpg',
+      'mz.jpg',
+    ])
+
+    this.scene.background = textureCube
+    this.scene.environment = textureCube
   }
 
   /**
