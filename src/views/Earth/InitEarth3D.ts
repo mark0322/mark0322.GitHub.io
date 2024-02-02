@@ -5,7 +5,6 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { get } from 'lodash-es';
 import { max, scaleSqrt } from 'd3';
-import * as TWEEN from 'three/examples/jsm/libs/tween.module.js';
 
 import type {ScalePower} from 'd3';
 import type { FeatureCollection, MultiPolygonCoord, LineStringCoord, PointCoord } from '@/types/geo';
@@ -28,7 +27,7 @@ export default class InitEarth3D extends Base {
   private countriesMesh: Mesh[] = []; // 所有国家的 mesh
   private scaleBar = new THREE.Vector3(1, 1, 0); // bar 的生长动画，由 scaleZ 决定
   private scaleH!: ScalePower<number, number, never>;
-  private annualGDPList!: [{text: string/* 国家名 */}, {text: string/* unit */}, {text: string/* year */}, {text: string/* gdp */}][];
+  private annualGDPList!: {gdp: string; name: string; year: string}[];
   private gBars!: THREE.Group; // 所有 gdp bar 的 group
 
   gdpBarControler!: {show: () => Promise<undefined>; hide: () => Promise<undefined>;};
@@ -53,7 +52,7 @@ export default class InitEarth3D extends Base {
 
     this.bindEvent();
 
-    this.initAnnualGDP();
+    this.fetchAnnualGDPList();
   }
 
   /**
@@ -61,14 +60,14 @@ export default class InitEarth3D extends Base {
    * @param year 
    */
   changeGDPBarsByYear(year: number) {
-    const gdpListForYear = this.annualGDPList.filter(d => d[2].text === year.toString());
+    const gdpListForYear = this.annualGDPList.filter(d => d.year === year.toString());
 
     this.gBars.children.forEach(meshBar => {
-      const gdpItem = gdpListForYear.find(d => d[0].text === meshBar.userData?.data?.name);
+      const gdpItem = gdpListForYear.find(d => d.name === meshBar.userData?.data?.name);
 
       if (gdpItem) {
         meshBar.visible = true;
-        const gdp = +gdpItem[3].text;
+        const gdp = +gdpItem.gdp;
         const h = this.scaleH(gdp);
 
         const maxH = meshBar.userData.maxH;
@@ -83,19 +82,10 @@ export default class InitEarth3D extends Base {
   /**
    * 获取 各国每年的 GPD 数据，以供 `changeGDPBarsByYear` 使用
    */
-  private initAnnualGDP() {
+  private fetchAnnualGDPList() {
     this.fileLoader.setResponseType('json');
     this.fileLoader.load('/earth3d/gdp.json', (res: any) => {
-      this.annualGDPList = res.Root.data.record.reduce((accu: any, curr: any) => {
-        curr = curr.field;
-        const hasName = curr[0]?.text;
-        const hasYear = curr[2]?.text;
-        const hasGDP = curr[3]?.text;
-        if (hasName && hasYear && hasGDP) {
-          accu.push(curr);
-        }
-        return accu;
-      }, []);
+      this.annualGDPList = res;
     });
   }
 
