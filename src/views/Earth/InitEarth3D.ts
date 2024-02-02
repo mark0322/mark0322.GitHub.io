@@ -29,14 +29,12 @@ export default class InitEarth3D extends Base {
   private scaleH!: ScalePower<number, number, never>;
   private annualGDPList!: {gdp: string; name: string; year: string}[];
   private gBars!: THREE.Group; // 所有 gdp bar 的 group
+  private contryMaterial = new THREE.MeshPhongMaterial({ color: CountryColor.normal, transparent: true });
 
   public gdpBarControler!: {show: () => Promise<undefined>; hide: () => Promise<undefined>;};
 
   constructor(dom: HTMLDivElement) {
     super(dom);
-    this.addLight()
-    
-    this.initCountryNameLabel();
     
     // 地球半径
     const r = this.r = 3;
@@ -49,16 +47,17 @@ export default class InitEarth3D extends Base {
         this.gdpBarControler = this.drawGDPBars(r, features)
       });
 
+    this.addLight();
     this.bindEvent();
-
     this.fetchAnnualGDPList();
-
     this.initSkyBox();
+    this.initCountryNameLabel();
 
 
     this.camera.position.set(-1.748, 4.13, -6.624);
     this.controls.minDistance = 4;
   }
+
   // 场景天空盒 - CubeTextureLoader
   private initSkyBox() {
     const textureCubeLoader = new THREE.CubeTextureLoader().setPath('/earth3d/skybox_galaxy/')
@@ -122,7 +121,7 @@ export default class InitEarth3D extends Base {
     });
 
     const maxGDP = max(features, d => d.properties.gdp)!;
-    const maxH = 2;
+    const maxH = r / 3 * 2;
 
     // 指数比例尺，将 gdp 的值 映射至 柱子高度
     this.scaleH = scaleSqrt([0, maxGDP], [0, maxH]);
@@ -131,7 +130,8 @@ export default class InitEarth3D extends Base {
     const color2 = new THREE.Color(0x44eeee);
 
     // 过滤出 包含 gdp 和 center 的国家，以便绘制 bars
-    features.filter(feature => (feature.properties.gdp > 0) && Array.isArray(feature.properties.center))
+    features
+      .filter(feature => (feature.properties.gdp > 0) && Array.isArray(feature.properties.center))
       .forEach(feature => {
         const {gdp, center} = feature.properties;
 
@@ -368,7 +368,6 @@ export default class InitEarth3D extends Base {
         })
       }
     });
-
   }
 
   /**
@@ -479,10 +478,7 @@ export default class InitEarth3D extends Base {
     });
 
     const geometry = mergeGeometries(geometries);
-    const material = new THREE.MeshPhongMaterial({ 
-      color: CountryColor.normal, 
-      transparent: true
-    });
+    const material = this.contryMaterial.clone();
 
     const mesh = new THREE.Mesh(geometry, material);
     this.scene.add(mesh);
