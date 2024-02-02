@@ -292,8 +292,10 @@ export default class InitEarth3D extends Base {
   /**
    * 绘制：
    *  1. 国家的边界线
-   *  2. 绘制国家的 mesh
-   *  3. 绘制地球的 mesh
+   *  2. 绘制国家 mesh
+   *  3. 绘制地球 bg
+   *  4. 绘制 流动大气层
+   *  5. 动画圆点 绘制 国家首都
    * @param r 
    * @param features 
    */
@@ -322,7 +324,7 @@ export default class InitEarth3D extends Base {
     // 4. 绘制流动的大气层 
     this.atmosphere = this.drawAtmosphere(r)
 
-    // 5. 以 动画圆点 绘制 国家的首都
+    // 5. 动画圆点 绘制 国家首都
     this.drawCapitalPoint(r, features);
   }
 
