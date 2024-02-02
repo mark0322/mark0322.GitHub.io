@@ -349,6 +349,90 @@ export class Base extends Emitter {
     gridHelper.rotateX(Math.PI / 2);
     this.scene.add(gridHelper);
   }
+
+  /**
+   * 创建一个 PlaneMesh，其内部的文字为 canvas 而成
+   * @param text 
+   * @returns {THREE.Mesh & { updateText: (text: string) => void }} `updateText`函数的作用：更新 canvas 内的文本
+   */
+  protected createLabel_CanvasMesh(text = '') {
+    const canvasEle = document.createElement('canvas');
+    const ctx = canvasEle.getContext('2d') as CanvasRenderingContext2D;
+
+    // 设置字体样式
+    ctx.font = "30px Arial";
+    // 设置文本对齐方式
+    ctx.textAlign = "center"; 
+    ctx.textBaseline = 'middle';
+    // 设置填充颜色
+    ctx.fillStyle = "#eeeeee";
+    ctx.fillText(text, 150, 75);
+
+    const canvasTexture = new THREE.CanvasTexture(canvasEle);
+
+    const material = new THREE.MeshBasicMaterial({
+      map: canvasTexture,
+      color: 0xffffff,
+      transparent: true,
+      // side: THREE.DoubleSide,
+      depthTest: false,
+      // depthWrite: false
+    });
+
+    const geometry = new THREE.PlaneGeometry(3, 1.5);
+    const mesh = new THREE.Mesh(geometry, material);
+
+    function updateText(text: string) {
+      const ctx = mesh.material.map?.image?.getContext('2d') as CanvasRenderingContext2D;
+
+      ctx.clearRect(0, 0, 300, 150);
+      ctx.fillText(text, 150, 75);
+      canvasTexture.needsUpdate = true;
+    }
+
+    const result = mesh as MeshCanvasText;
+    result.updateText = updateText;
+    return result;
+  }
+
+  /**
+   * 摄像机 朝向 target物体，并返回 target 的 中心点/大小/包围盒
+   * @param target 要看向的 物体
+   * @returns {THREE.Box3}
+   */
+  protected lookAt(target: THREE.Object3D) {
+    const box3 = new THREE.Box3()
+    box3.setFromObject(target)
+  
+    const v3Center = new THREE.Vector3()
+    box3.getCenter(v3Center)
+    const v3Size = new THREE.Vector3()
+    box3.getSize(v3Size)
+  
+    this.controls.target.set(v3Center.x, v3Center.y, v3Center.z);
+    this.camera.lookAt(v3Center)
+
+    return {
+      center: v3Center,
+      size: v3Size,
+      box3
+    };
+  }
+
+  /**
+   * 使用 Stats，显示 帧速率
+   */
+  async showFps() {
+    const {default: Stats} = await import('three/addons/libs/stats.module.js')
+
+    const stats = new Stats();
+
+    this.animate.add(() => {
+      stats.update();
+    });
+
+    this.dom.appendChild(stats.dom)
+  }
 }
 
 
@@ -383,3 +467,12 @@ type Options = Partial<{
    */
   logarithmicDepthBuffer: boolean
 }>
+
+interface MeshCanvasText extends THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial> {
+  /**
+   * 更新 canvas 中的文字
+   * @param text 要被更新的文字
+   * @returns 
+   */
+  updateText: (text: string) => void 
+}
