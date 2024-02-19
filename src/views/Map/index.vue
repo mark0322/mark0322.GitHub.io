@@ -29,18 +29,15 @@ function drawMap() {
   // } else {
   //   oThree.value?.drawMap(`/map3d/${switchMap.value}.json`, is3D.value, {extrudeHeight: 1});
   // }
+  // 
 }
 
 // 初始化
-watch(oThree, () => {
-  drawMap();
-});
+watch(oThree, drawMap);
 
 const switchMap = ref('shandong');
 const is3D = ref(true);
-watch([switchMap, is3D], () => {
-  drawMap();
-});
+watch([switchMap, is3D], drawMap);
 </script>
 
 
