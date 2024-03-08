@@ -346,7 +346,7 @@ export class GeometryThree {
           if (!sf && deltaAng > 0) deltaAng -= Math.PI * 2
           if (sf && deltaAng < 0) deltaAng += Math.PI * 2
   
-          path.absarc(cx, cy, rx, startAng, startAng + deltaAng, sf)
+          path.absarc(cx, cy, rx, startAng, startAng + deltaAng, !!sf)
           x = nx
           y = ny
           break

@@ -21,7 +21,7 @@ const oThree = useThree(refEl as Ref<HTMLDivElement>);
 
 function drawMap() {
   oThree.value?.clearMap();
-  oThree.value?.drawMap(`/map3d/${switchMap.value}.json`, is3D.value, {extrudeHeight: 1});
+  oThree.value?.drawMap(`${import.meta.env.VITE_APP_BASE_API}/map3d/${switchMap.value}.json`, is3D.value, {extrudeHeight: 1});
   // if (switchMap.value === 'world') {
   //   oThree.value?.drawMap(`/map3d/${switchMap.value}.json`, is3D.value, {extrudeHeight: 10});
   // } else if (switchMap.value = 'china') {

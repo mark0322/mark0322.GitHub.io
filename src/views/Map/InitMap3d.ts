@@ -29,7 +29,7 @@ export default class InitMap3D extends Base {
     this.disposeChildren(this.g);
   }
 
-  async drawMap(url = '/map3d/world.json', is3D = false, { extrudeHeight } = { extrudeHeight: 2 }) {
+  async drawMap(url = `${import.meta.env.VITE_APP_BASE_API}/map3d/world.json`, is3D = false, { extrudeHeight } = { extrudeHeight: 2 }) {
     // const g = new THREE.Group();
 
     this.fileLoader.setResponseType('json');

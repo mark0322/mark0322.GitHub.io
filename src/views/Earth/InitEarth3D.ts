@@ -38,7 +38,7 @@ export default class InitEarth3D extends Base {
     
     // 地球半径
     const r = this.r = 3;
-    this.loadGeojson('/earth3d/countriesWithGDPAndCenter.json')
+    this.loadGeojson(`${import.meta.env.VITE_APP_BASE_API}/earth3d/countriesWithGDPAndCenter.json`)
       .then(features => {
         // 绘制 地球
         this.drawEarth(r, features);
@@ -60,7 +60,7 @@ export default class InitEarth3D extends Base {
 
   // 场景天空盒 - CubeTextureLoader
   private initSkyBox() {
-    const textureCubeLoader = new THREE.CubeTextureLoader().setPath('/earth3d/skybox_galaxy/')
+    const textureCubeLoader = new THREE.CubeTextureLoader().setPath(`${import.meta.env.VITE_APP_BASE_API}/earth3d/skybox_galaxy/`)
     const textureCube = textureCubeLoader.load([
       'px.jpg',
       'nx.jpg',
@@ -103,7 +103,7 @@ export default class InitEarth3D extends Base {
    */
   private fetchAnnualGDPList() {
     this.fileLoader.setResponseType('json');
-    this.fileLoader.load('/earth3d/gdp.json', (res: any) => {
+    this.fileLoader.load(`${import.meta.env.VITE_APP_BASE_API}/earth3d/gdp.json`, (res: any) => {
       this.annualGDPList = res;
     });
   }
@@ -408,7 +408,7 @@ export default class InitEarth3D extends Base {
     this.realEarthBGMaterial = new THREE.MeshBasicMaterial({
       side: THREE.DoubleSide,
       color: 0xffffff,
-      map: this.textureLoader.load('/earth3d/earth.jpg')
+      map: this.textureLoader.load(`${import.meta.env.VITE_APP_BASE_API}/earth3d/earth.jpg`)
     })
     // 地球（纯色、黑色）壳子
     const geoEarthBg = new THREE.SphereGeometry(r - 0.005, 50, 50);
@@ -416,7 +416,7 @@ export default class InitEarth3D extends Base {
 
     // ----- 使用精灵图 制作 地球光晕 -----
     const spriteMaterial = new THREE.SpriteMaterial({
-      map: this.textureLoader.load('/earth3d/地球光圈.png'),
+      map: this.textureLoader.load(`${import.meta.env.VITE_APP_BASE_API}/earth3d/地球光圈.png`),
       transparent: true,
       opacity: 0.5,
     });
